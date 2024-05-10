@@ -6,26 +6,44 @@ pipeline {
     stages {
         stage("Checkout SCM") {
             steps {
-                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/chandan-hn/Maven_Hello_World.git']])
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/VinuthaHede/Maven_Hello_World.git']])
+            }
+        }
+        stage("Maven Build") {
+            steps {
                 sh 'mvn clean install'
             }
         }
-        stage('Building Docker Image') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t chandanhn/mavenimg . '
+                    sh 'docker build -t vinuthahede23/mavenimg . '
                 
                 }
             }
         }
-        stage("Uploading Docker Image to DockerHub") {
+        stage("Upload Docker Image to DockerHub") {
             steps {
                 script {
-                        withCredentials([string(credentialsId: 'docker-id', variable: 'dockerhub_password')]) {
-                        sh 'docker login -u chandanhn -p ${dockerhub_password}'
+                        withCredentials([string(credentialsId: 'docker_id', variable: 'dockerhub_password')]) {
+                        sh 'docker login -u vinuthahede23 -p ${dockerhub_password}'
                     }
-                    sh 'docker push chandanhn/mavenimg'
-                    sh 'docker run -it -d -p 8081:8080 --name tomcat-container-demo chandanhn/mavenimg'
+                    sh 'docker push vinuthahede23/mavenimg'
+                }
+            }
+        }
+        stage("Run the container"){
+            parallel{
+                stage('container1'){
+                    steps{
+                        sh 'docker run -it -d -p 8084:8080 --name conatiner1 vinuthahede23/mavenimg'
+                    }
+                }
+
+                stage('container2'){
+                    steps{
+                        sh 'docker run -it -d -p 8086:8080 --name conatiner2 vinuthahede23/mavenimg'
+                    }
                 }
             }
         }
